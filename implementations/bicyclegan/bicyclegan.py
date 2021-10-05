@@ -45,7 +45,7 @@ print(opt)
 os.makedirs("images/%s" % opt.dataset_name, exist_ok=True)
 os.makedirs("saved_models/%s" % opt.dataset_name, exist_ok=True)
 
-cuda = True if torch.cuda.is_available() else False
+cuda = bool(torch.cuda.is_available())
 
 input_shape = (opt.channels, opt.img_height, opt.img_width)
 
@@ -125,8 +125,7 @@ def sample_images(batches_done):
 def reparameterization(mu, logvar):
     std = torch.exp(logvar / 2)
     sampled_z = Variable(Tensor(np.random.normal(0, 1, (mu.size(0), opt.latent_dim))))
-    z = sampled_z * std + mu
-    return z
+    return sampled_z * std + mu
 
 
 # ----------

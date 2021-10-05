@@ -30,7 +30,7 @@ parser.add_argument("--sample_interval", type=int, default=1000, help="number of
 opt = parser.parse_args()
 print(opt)
 
-cuda = True if torch.cuda.is_available() else False
+cuda = bool(torch.cuda.is_available())
 
 
 def weights_init_normal(m):
@@ -65,8 +65,7 @@ class Generator(nn.Module):
     def forward(self, z):
         out = self.l1(z)
         out = out.view(out.shape[0], 128, self.init_size, self.init_size)
-        img = self.conv_blocks(out)
-        return img
+        return self.conv_blocks(out)
 
 
 class Discriminator(nn.Module):
@@ -93,9 +92,7 @@ class Discriminator(nn.Module):
     def forward(self, img):
         out = self.model(img)
         out = out.view(out.shape[0], -1)
-        validity = self.adv_layer(out)
-
-        return validity
+        return self.adv_layer(out)
 
 
 # !!! Minimizes MSE instead of BCE

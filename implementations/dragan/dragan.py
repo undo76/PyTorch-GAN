@@ -31,7 +31,7 @@ parser.add_argument("--sample_interval", type=int, default=1000, help="interval 
 opt = parser.parse_args()
 print(opt)
 
-cuda = True if torch.cuda.is_available() else False
+cuda = bool(torch.cuda.is_available())
 
 
 def weights_init_normal(m):
@@ -67,8 +67,7 @@ class Generator(nn.Module):
     def forward(self, noise):
         out = self.l1(noise)
         out = out.view(out.shape[0], 128, self.init_size, self.init_size)
-        img = self.conv_blocks(out)
-        return img
+        return self.conv_blocks(out)
 
 
 class Discriminator(nn.Module):
@@ -95,9 +94,7 @@ class Discriminator(nn.Module):
     def forward(self, img):
         out = self.model(img)
         out = out.view(out.shape[0], -1)
-        validity = self.adv_layer(out)
-
-        return validity
+        return self.adv_layer(out)
 
 
 # Loss function
@@ -163,8 +160,7 @@ def compute_gradient_penalty(D, X):
         only_inputs=True,
     )[0]
 
-    gradient_penalty = lambda_gp * ((gradients.norm(2, dim=1) - 1) ** 2).mean()
-    return gradient_penalty
+    return lambda_gp * ((gradients.norm(2, dim=1) - 1) ** 2).mean()
 
 
 # ----------

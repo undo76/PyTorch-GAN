@@ -65,7 +65,7 @@ class GeneratorResNet(nn.Module):
                 nn.InstanceNorm2d(curr_dim // 2, affine=True, track_running_stats=True),
                 nn.ReLU(inplace=True),
             ]
-            curr_dim = curr_dim // 2
+            curr_dim //= 2
 
         # Output layer
         model += [nn.Conv2d(curr_dim, channels, 7, stride=1, padding=3), nn.Tanh()]
@@ -91,8 +91,10 @@ class Discriminator(nn.Module):
 
         def discriminator_block(in_filters, out_filters):
             """Returns downsampling layers of each discriminator block"""
-            layers = [nn.Conv2d(in_filters, out_filters, 4, stride=2, padding=1), nn.LeakyReLU(0.01)]
-            return layers
+            return [
+                nn.Conv2d(in_filters, out_filters, 4, stride=2, padding=1),
+                nn.LeakyReLU(0.01),
+            ]
 
         layers = discriminator_block(channels, 64)
         curr_dim = 64

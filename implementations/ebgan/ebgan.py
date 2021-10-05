@@ -32,7 +32,7 @@ print(opt)
 
 img_shape = (opt.channels, opt.img_size, opt.img_size)
 
-cuda = True if torch.cuda.is_available() else False
+cuda = bool(torch.cuda.is_available())
 
 
 def weights_init_normal(m):
@@ -67,8 +67,7 @@ class Generator(nn.Module):
     def forward(self, noise):
         out = self.l1(noise)
         out = out.view(out.shape[0], 128, self.init_size, self.init_size)
-        img = self.conv_blocks(out)
-        return img
+        return self.conv_blocks(out)
 
 
 class Discriminator(nn.Module):
@@ -144,8 +143,7 @@ def pullaway_loss(embeddings):
     normalized_emb = embeddings / norm
     similarity = torch.matmul(normalized_emb, normalized_emb.transpose(1, 0))
     batch_size = embeddings.size(0)
-    loss_pt = (torch.sum(similarity) - batch_size) / (batch_size * (batch_size - 1))
-    return loss_pt
+    return (torch.sum(similarity) - batch_size) / (batch_size * (batch_size - 1))
 
 
 # ----------

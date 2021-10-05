@@ -38,8 +38,7 @@ class UNetUp(nn.Module):
 
     def forward(self, x, skip_input):
         x = self.model(x)
-        out = torch.cat((x, skip_input), 1)
-        return out
+        return torch.cat((x, skip_input), 1)
 
 
 class Generator(nn.Module):

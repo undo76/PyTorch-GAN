@@ -36,7 +36,7 @@ print(opt)
 
 img_shape = (opt.channels, opt.img_size, opt.img_size)
 
-cuda = True if torch.cuda.is_available() else False
+cuda = bool(torch.cuda.is_available())
 
 
 class Generator(nn.Module):
@@ -79,8 +79,7 @@ class Discriminator(nn.Module):
 
     def forward(self, img):
         img_flat = img.view(img.shape[0], -1)
-        validity = self.model(img_flat)
-        return validity
+        return self.model(img_flat)
 
 
 # Loss weight for gradient penalty
@@ -134,8 +133,7 @@ def compute_gradient_penalty(D, real_samples, fake_samples):
         only_inputs=True,
     )[0]
     gradients = gradients.view(gradients.size(0), -1)
-    gradient_penalty = ((gradients.norm(2, dim=1) - 1) ** 2).mean()
-    return gradient_penalty
+    return ((gradients.norm(2, dim=1) - 1) ** 2).mean()
 
 
 # ----------

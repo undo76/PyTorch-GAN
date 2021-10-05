@@ -39,7 +39,7 @@ print(opt)
 patch = int(opt.img_size / 2 ** 4)
 patch = (1, patch, patch)
 
-cuda = True if torch.cuda.is_available() else False
+cuda = bool(torch.cuda.is_available())
 
 
 def weights_init_normal(m):
@@ -76,9 +76,7 @@ class Generator(nn.Module):
 
         self.l1 = nn.Sequential(nn.Conv2d(opt.channels * 2, 64, 3, 1, 1), nn.ReLU(inplace=True))
 
-        resblocks = []
-        for _ in range(opt.n_residual_blocks):
-            resblocks.append(ResidualBlock())
+        resblocks = [ResidualBlock() for _ in range(opt.n_residual_blocks)]
         self.resblocks = nn.Sequential(*resblocks)
 
         self.l2 = nn.Sequential(nn.Conv2d(64, opt.channels, 3, 1, 1), nn.Tanh())
@@ -87,9 +85,7 @@ class Generator(nn.Module):
         gen_input = torch.cat((img, self.fc(z).view(*img.shape)), 1)
         out = self.l1(gen_input)
         out = self.resblocks(out)
-        img_ = self.l2(out)
-
-        return img_
+        return self.l2(out)
 
 
 class Discriminator(nn.Module):
@@ -112,9 +108,7 @@ class Discriminator(nn.Module):
         )
 
     def forward(self, img):
-        validity = self.model(img)
-
-        return validity
+        return self.model(img)
 
 
 class Classifier(nn.Module):
@@ -138,8 +132,7 @@ class Classifier(nn.Module):
     def forward(self, img):
         feature_repr = self.model(img)
         feature_repr = feature_repr.view(feature_repr.size(0), -1)
-        label = self.output_layer(feature_repr)
-        return label
+        return self.output_layer(feature_repr)
 
 
 # Loss function

@@ -47,7 +47,7 @@ os.makedirs("saved_models/%s" % opt.dataset_name, exist_ok=True)
 
 img_shape = (opt.channels, opt.img_size, opt.img_size)
 
-cuda = True if torch.cuda.is_available() else False
+cuda = bool(torch.cuda.is_available())
 
 # Loss function
 cycle_loss = torch.nn.L1Loss()
@@ -131,8 +131,7 @@ def compute_gradient_penalty(D, real_samples, fake_samples):
         only_inputs=True,
     )[0]
     gradients = gradients.view(gradients.size(0), -1)
-    gradient_penalty = ((gradients.norm(2, dim=1) - 1) ** 2).mean()
-    return gradient_penalty
+    return ((gradients.norm(2, dim=1) - 1) ** 2).mean()
 
 
 def sample_images(batches_done):

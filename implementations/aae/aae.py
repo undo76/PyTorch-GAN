@@ -33,14 +33,13 @@ print(opt)
 
 img_shape = (opt.channels, opt.img_size, opt.img_size)
 
-cuda = True if torch.cuda.is_available() else False
+cuda = bool(torch.cuda.is_available())
 
 
 def reparameterization(mu, logvar):
     std = torch.exp(logvar / 2)
     sampled_z = Variable(Tensor(np.random.normal(0, 1, (mu.size(0), opt.latent_dim))))
-    z = sampled_z * std + mu
-    return z
+    return sampled_z * std + mu
 
 
 class Encoder(nn.Module):
@@ -63,8 +62,7 @@ class Encoder(nn.Module):
         x = self.model(img_flat)
         mu = self.mu(x)
         logvar = self.logvar(x)
-        z = reparameterization(mu, logvar)
-        return z
+        return reparameterization(mu, logvar)
 
 
 class Decoder(nn.Module):
@@ -83,8 +81,7 @@ class Decoder(nn.Module):
 
     def forward(self, z):
         img_flat = self.model(z)
-        img = img_flat.view(img_flat.shape[0], *img_shape)
-        return img
+        return img_flat.view(img_flat.shape[0], *img_shape)
 
 
 class Discriminator(nn.Module):
@@ -101,8 +98,7 @@ class Discriminator(nn.Module):
         )
 
     def forward(self, z):
-        validity = self.model(z)
-        return validity
+        return self.model(z)
 
 
 # Use binary cross-entropy loss

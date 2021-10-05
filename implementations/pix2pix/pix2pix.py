@@ -44,7 +44,7 @@ print(opt)
 os.makedirs("images/%s" % opt.dataset_name, exist_ok=True)
 os.makedirs("saved_models/%s" % opt.dataset_name, exist_ok=True)
 
-cuda = True if torch.cuda.is_available() else False
+cuda = bool(torch.cuda.is_available())
 
 # Loss functions
 criterion_GAN = torch.nn.MSELoss()

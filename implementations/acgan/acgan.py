@@ -31,7 +31,7 @@ parser.add_argument("--sample_interval", type=int, default=400, help="interval b
 opt = parser.parse_args()
 print(opt)
 
-cuda = True if torch.cuda.is_available() else False
+cuda = bool(torch.cuda.is_available())
 
 
 def weights_init_normal(m):
@@ -70,8 +70,7 @@ class Generator(nn.Module):
         gen_input = torch.mul(self.label_emb(labels), noise)
         out = self.l1(gen_input)
         out = out.view(out.shape[0], 128, self.init_size, self.init_size)
-        img = self.conv_blocks(out)
-        return img
+        return self.conv_blocks(out)
 
 
 class Discriminator(nn.Module):

@@ -41,7 +41,7 @@ parser.add_argument("--dim", type=int, default=64, help="number of filters in fi
 opt = parser.parse_args()
 print(opt)
 
-cuda = True if torch.cuda.is_available() else False
+cuda = bool(torch.cuda.is_available())
 
 # Create sample and checkpoint directories
 os.makedirs("images/%s" % opt.dataset_name, exist_ok=True)
@@ -162,8 +162,7 @@ def sample_images(batches_done):
 
 def compute_kl(mu):
     mu_2 = torch.pow(mu, 2)
-    loss = torch.mean(mu_2)
-    return loss
+    return torch.mean(mu_2)
 
 
 # ----------

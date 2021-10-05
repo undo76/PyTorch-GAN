@@ -38,9 +38,7 @@ class GeneratorResNet(nn.Module):
         self.conv1 = nn.Sequential(nn.Conv2d(in_channels, 64, kernel_size=9, stride=1, padding=4), nn.PReLU())
 
         # Residual blocks
-        res_blocks = []
-        for _ in range(n_residual_blocks):
-            res_blocks.append(ResidualBlock(64))
+        res_blocks = [ResidualBlock(64) for _ in range(n_residual_blocks)]
         self.res_blocks = nn.Sequential(*res_blocks)
 
         # Second conv layer post residual blocks
@@ -48,7 +46,7 @@ class GeneratorResNet(nn.Module):
 
         # Upsampling layers
         upsampling = []
-        for out_features in range(2):
+        for _ in range(2):
             upsampling += [
                 # nn.Upsample(scale_factor=2),
                 nn.Conv2d(64, 256, 3, 1, 1),
@@ -81,8 +79,10 @@ class Discriminator(nn.Module):
         self.output_shape = (1, patch_h, patch_w)
 
         def discriminator_block(in_filters, out_filters, first_block=False):
-            layers = []
-            layers.append(nn.Conv2d(in_filters, out_filters, kernel_size=3, stride=1, padding=1))
+            layers = [
+                nn.Conv2d(in_filters, out_filters, kernel_size=3, stride=1, padding=1)
+            ]
+
             if not first_block:
                 layers.append(nn.BatchNorm2d(out_filters))
             layers.append(nn.LeakyReLU(0.2, inplace=True))

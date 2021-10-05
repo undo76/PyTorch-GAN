@@ -154,8 +154,7 @@ class MultiDiscriminator(nn.Module):
 
     def compute_loss(self, x, gt):
         """Computes the MSE between model output and scalar gt"""
-        loss = sum([torch.mean((out - gt) ** 2) for out in self.forward(x)])
-        return loss
+        return sum(torch.mean((out - gt) ** 2) for out in self.forward(x))
 
     def forward(self, x):
         outputs = []

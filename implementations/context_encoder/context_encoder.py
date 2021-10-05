@@ -8,6 +8,7 @@ Instrustion on running the script:
 4. Run the sript using command 'python3 context_encoder.py'
 """
 
+
 import argparse
 import os
 import numpy as np
@@ -46,7 +47,7 @@ parser.add_argument("--sample_interval", type=int, default=500, help="interval b
 opt = parser.parse_args()
 print(opt)
 
-cuda = True if torch.cuda.is_available() else False
+cuda = bool(torch.cuda.is_available())
 
 # Calculate output of image discriminator (PatchGAN)
 patch_h, patch_w = int(opt.mask_size / 2 ** 3), int(opt.mask_size / 2 ** 3)

@@ -105,13 +105,7 @@ def calc_gradient_penalty(netD, real_data, generated_data):
 # Weight Initializer
 def initialize_weights(net):
     for m in net.modules():
-        if isinstance(m, nn.Conv2d):
-            m.weight.data.normal_(0, 0.02)
-            m.bias.data.zero_()
-        elif isinstance(m, nn.ConvTranspose2d):
-            m.weight.data.normal_(0, 0.02)
-            m.bias.data.zero_()
-        elif isinstance(m, nn.Linear):
+        if isinstance(m, (nn.Conv2d, nn.ConvTranspose2d, nn.Linear)):
             m.weight.data.normal_(0, 0.02)
             m.bias.data.zero_()
 
@@ -292,9 +286,7 @@ class Discriminator_CNN(nn.Module):
             print(self.model)
 
     def forward(self, img):
-        # Get output
-        validity = self.model(img)
-        return validity
+        return self.model(img)
 
 
 
@@ -323,7 +315,7 @@ wass_metric = args.wass_flag
 
 x_shape = (channels, img_size, img_size)
 
-cuda = True if torch.cuda.is_available() else False
+cuda = bool(torch.cuda.is_available())
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
 # Loss function
@@ -343,7 +335,7 @@ if cuda:
     bce_loss.cuda()
     xe_loss.cuda()
     mse_loss.cuda()
-    
+
 Tensor = torch.cuda.FloatTensor if cuda else torch.FloatTensor
 
 # Configure data loader
@@ -395,9 +387,11 @@ c_i = []
 
 # Training loop 
 print('\nBegin training session with %i epochs...\n'%(n_epochs))
+# Set number of examples for cycle calcs
+n_sqrt_samp = 5
 for epoch in range(n_epochs):
     for i, (imgs, itruth_label) in enumerate(dataloader):
-       
+
         # Ensure generator/encoder are trainable
         generator.train()
         encoder.train()
@@ -406,16 +400,16 @@ for epoch in range(n_epochs):
         generator.zero_grad()
         encoder.zero_grad()
         discriminator.zero_grad()
-        
+
         # Configure input
         real_imgs = Variable(imgs.type(Tensor))
 
         # ---------------------------
         #  Train Generator + Encoder
         # ---------------------------
-        
+
         optimizer_GE.zero_grad()
-        
+
         # Sample random latent variables
         zn, zc, zc_idx = sample_z(shape=imgs.shape[0],
                                   latent_dim=latent_dim,
@@ -423,11 +417,11 @@ for epoch in range(n_epochs):
 
         # Generate a batch of images
         gen_imgs = generator(zn, zc)
-        
+
         # Discriminator output from real and generated samples
         D_gen = discriminator(gen_imgs)
         D_real = discriminator(real_imgs)
-        
+
         # Step for Generator & Encoder, n_skip_iter times less than for discriminator
         if (i % n_skip_iter == 0):
             # Encode the generated images
@@ -463,7 +457,7 @@ for epoch in range(n_epochs):
 
             # Wasserstein GAN loss w/gradient penalty
             d_loss = torch.mean(D_real) - torch.mean(D_gen) + grad_penalty
-            
+
         else:
             # Vanilla GAN loss
             fake = Variable(Tensor(gen_imgs.size(0), 1).fill_(0.0), requires_grad=False)
@@ -484,9 +478,7 @@ for epoch in range(n_epochs):
     generator.eval()
     encoder.eval()
 
-    # Set number of examples for cycle calcs
-    n_sqrt_samp = 5
-    n_samp = n_sqrt_samp * n_sqrt_samp
+    n_samp = n_sqrt_samp**2
 
 
     ## Cycle through test real -> enc -> gen
@@ -499,7 +491,7 @@ for epoch in range(n_epochs):
     img_mse_loss = mse_loss(t_imgs, teg_imgs)
     # Save img reco cycle loss
     c_i.append(img_mse_loss.item())
-   
+
 
     ## Cycle through randomly sampled encoding -> generator -> encoder
     zn_samp, zc_samp, zc_samp_idx = sample_z(shape=n_samp,
@@ -518,7 +510,7 @@ for epoch in range(n_epochs):
     # Save latent space cycle losses
     c_zn.append(lat_mse_loss.item())
     c_zc.append(lat_xe_loss.item())
-  
+
     # Save cycled and generated examples!
     r_imgs, i_label = real_imgs.data[:n_samp], itruth_label[:n_samp]
     e_zn, e_zc, e_zc_logits = encoder(r_imgs)
@@ -529,7 +521,7 @@ for epoch in range(n_epochs):
     save_image(gen_imgs_samp.data[:n_samp],
                'images/gen_%06i.png' %(epoch), 
                nrow=n_sqrt_samp, normalize=True)
-    
+
     ## Generate samples for specified classes
     stack_imgs = []
     for idx in range(n_c):
@@ -542,7 +534,7 @@ for epoch in range(n_epochs):
         # Generate sample instances
         gen_imgs_samp = generator(zn_samp, zc_samp)
 
-        if (len(stack_imgs) == 0):
+        if not stack_imgs:
             stack_imgs = gen_imgs_samp
         else:
             stack_imgs = torch.cat((stack_imgs, gen_imgs_samp), 0)
@@ -551,7 +543,7 @@ for epoch in range(n_epochs):
     save_image(stack_imgs,
                'images/gen_classes_%06i.png' %(epoch),
                nrow=n_c, normalize=True)
- 
+
 
     print ("[Epoch %d/%d] \n"\
            "\tModel Losses: [D: %f] [GE: %f]" % (epoch, 
@@ -559,7 +551,7 @@ for epoch in range(n_epochs):
                                                  d_loss.item(),
                                                  ge_loss.item())
           )
-    
+
     print("\tCycle Losses: [x: %f] [z_n: %f] [z_c: %f]"%(img_mse_loss.item(), 
                                                          lat_mse_loss.item(), 
                                                          lat_xe_loss.item())

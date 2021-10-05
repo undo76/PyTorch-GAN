@@ -51,12 +51,8 @@ class Decoder(nn.Module):
     def __init__(self, out_channels=3, dim=64, n_residual=3, n_upsample=2, style_dim=8):
         super(Decoder, self).__init__()
 
-        layers = []
         dim = dim * 2 ** n_upsample
-        # Residual blocks
-        for _ in range(n_residual):
-            layers += [ResidualBlock(dim, norm="adain")]
-
+        layers = [ResidualBlock(dim, norm="adain") for _ in range(n_residual)]
         # Upsampling
         for _ in range(n_upsample):
             layers += [
@@ -78,11 +74,11 @@ class Decoder(nn.Module):
 
     def get_num_adain_params(self):
         """Return the number of AdaIN parameters needed by the model"""
-        num_adain_params = 0
-        for m in self.modules():
-            if m.__class__.__name__ == "AdaptiveInstanceNorm2d":
-                num_adain_params += 2 * m.num_features
-        return num_adain_params
+        return sum(
+            2 * m.num_features
+            for m in self.modules()
+            if m.__class__.__name__ == "AdaptiveInstanceNorm2d"
+        )
 
     def assign_adain_params(self, adain_params):
         """Assign the adain_params to the AdaIN layers in model"""
@@ -101,8 +97,7 @@ class Decoder(nn.Module):
     def forward(self, content_code, style_code):
         # Update AdaIN parameters by MLP prediction based off style code
         self.assign_adain_params(self.mlp(style_code))
-        img = self.model(content_code)
-        return img
+        return self.model(content_code)
 
 
 #################################
@@ -224,8 +219,7 @@ class MultiDiscriminator(nn.Module):
 
     def compute_loss(self, x, gt):
         """Computes the MSE between model output and scalar gt"""
-        loss = sum([torch.mean((out - gt) ** 2) for out in self.forward(x)])
-        return loss
+        return sum(torch.mean((out - gt) ** 2) for out in self.forward(x))
 
     def forward(self, x):
         outputs = []

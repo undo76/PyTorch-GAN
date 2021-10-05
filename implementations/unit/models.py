@@ -96,12 +96,8 @@ class Generator(nn.Module):
 
         self.shared_block = shared_block
 
-        layers = []
         dim = dim * 2 ** n_upsample
-        # Residual blocks
-        for _ in range(3):
-            layers += [ResidualBlock(dim)]
-
+        layers = [ResidualBlock(dim) for _ in range(3)]
         # Upsampling
         for _ in range(n_upsample):
             layers += [

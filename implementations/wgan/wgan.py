@@ -33,7 +33,7 @@ print(opt)
 
 img_shape = (opt.channels, opt.img_size, opt.img_size)
 
-cuda = True if torch.cuda.is_available() else False
+cuda = bool(torch.cuda.is_available())
 
 
 class Generator(nn.Module):
@@ -76,8 +76,7 @@ class Discriminator(nn.Module):
 
     def forward(self, img):
         img_flat = img.view(img.shape[0], -1)
-        validity = self.model(img_flat)
-        return validity
+        return self.model(img_flat)
 
 
 # Initialize generator and discriminator
